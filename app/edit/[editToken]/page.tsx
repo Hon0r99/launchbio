@@ -7,15 +7,17 @@ import { UpgradeButton } from "@/components/upgrade-button";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { getCurrentUser } from "@/lib/auth";
+import { safeJsonParse } from "@/lib/utils/json";
 
 export default async function EditPage({
   params,
 }: {
-  params: { editToken: string };
+  params: Promise<{ editToken: string }>;
 }) {
+  const { editToken } = await params;
   const user = await getCurrentUser();
   const page = await prisma.page.findUnique({
-    where: { editToken: params.editToken },
+    where: { editToken },
   });
 
   if (!page) notFound();
@@ -25,7 +27,7 @@ export default async function EditPage({
     description: page.description,
     eventDateTime: page.eventDateTime.toISOString(),
     bgType: page.bgType as any,
-    buttons: page.buttons ? (JSON.parse(page.buttons) as any[]) : [],
+    buttons: safeJsonParse<Array<{ label: string; url: string }>>(page.buttons, []),
     ownerEmail: page.ownerEmail,
     afterLaunchText: page.afterLaunchText,
     analyticsId: page.analyticsId,

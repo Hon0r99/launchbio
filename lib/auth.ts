@@ -3,6 +3,7 @@
 import bcrypt from "bcryptjs";
 import { cookies } from "next/headers";
 import { prisma } from "./prisma";
+import { validatePassword } from "./validation";
 
 const SESSION_COOKIE = "lb_session";
 const SESSION_TTL_SECONDS = 60 * 60 * 24 * 30; // 30 days
@@ -17,6 +18,12 @@ function verifyPassword(password: string, hash: string) {
 }
 
 export async function registerUser(email: string, password: string) {
+  // Validate password strength
+  const passwordValidation = validatePassword(password);
+  if (!passwordValidation.valid) {
+    throw new Error(passwordValidation.error || "Invalid password");
+  }
+
   const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) throw new Error("User already exists");
   const passwordHash = hashPassword(password);
@@ -66,10 +73,35 @@ export async function signOut() {
   cookieStore.set(SESSION_COOKIE, "", { maxAge: 0, path: "/" });
 }
 
+/**
+ * Clean up expired sessions from the database
+ * This should be called periodically, but we also clean up during getCurrentUser
+ */
+async function cleanupExpiredSessions() {
+  try {
+    await prisma.session.deleteMany({
+      where: {
+        expiresAt: {
+          lt: new Date(),
+        },
+      },
+    });
+  } catch (error) {
+    // Log but don't throw - cleanup failures shouldn't break the app
+    console.error("Failed to cleanup expired sessions:", error);
+  }
+}
+
 export async function getCurrentUser() {
   const cookieStore = await cookies();
   const token = cookieStore.get(SESSION_COOKIE)?.value;
-  if (!token) return null;
+  if (!token) {
+    // Cleanup expired sessions periodically (10% chance to avoid overhead)
+    if (Math.random() < 0.1) {
+      await cleanupExpiredSessions();
+    }
+    return null;
+  }
 
   const session = await prisma.session.findUnique({
     where: { token },

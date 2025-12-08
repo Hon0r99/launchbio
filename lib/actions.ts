@@ -7,6 +7,7 @@ import { createSlugFromTitle } from "./slug";
 import { pageSchema } from "./validation";
 import { getCurrentUser } from "./auth";
 import { proBackgroundOptions } from "./themes";
+import { safeJsonParse } from "./utils/json";
 
 function toDateTime(date: string, time: string) {
   const iso = `${date}T${time}:00Z`;
@@ -21,7 +22,10 @@ export async function createPageAction(formData: FormData) {
     eventDate: formData.get("eventDate"),
     eventTime: formData.get("eventTime"),
     bgType: formData.get("bgType"),
-    buttons: JSON.parse(String(formData.get("buttons") || "[]")),
+    buttons: safeJsonParse<Array<{ label: string; url: string }>>(
+      String(formData.get("buttons") || "[]"),
+      []
+    ),
     ownerEmail: formData.get("ownerEmail") ?? undefined,
     afterLaunchText: formData.get("afterLaunchText") ?? undefined,
     analyticsId: formData.get("analyticsId") ?? undefined,
@@ -63,13 +67,28 @@ export async function createPageAction(formData: FormData) {
 }
 
 export async function updatePageAction(editToken: string, payload: FormData) {
+  // First, verify that the user has permission to edit this page
+  const user = await getCurrentUser();
+  const pageBeforeUpdate = await prisma.page.findUnique({ where: { editToken } });
+  if (!pageBeforeUpdate) {
+    throw new Error("Page not found");
+  }
+
+  // Check authorization: user must be the owner of the page
+  if (pageBeforeUpdate.ownerId && user?.id !== pageBeforeUpdate.ownerId) {
+    throw new Error("Unauthorized: You can only edit your own pages");
+  }
+
   const parsed = pageSchema.safeParse({
     title: payload.get("title"),
     description: payload.get("description") ?? undefined,
     eventDate: payload.get("eventDate"),
     eventTime: payload.get("eventTime"),
     bgType: payload.get("bgType"),
-    buttons: JSON.parse(String(payload.get("buttons") || "[]")),
+    buttons: safeJsonParse<Array<{ label: string; url: string }>>(
+      String(payload.get("buttons") || "[]"),
+      []
+    ),
     ownerEmail: payload.get("ownerEmail") ?? undefined,
     afterLaunchText: payload.get("afterLaunchText") ?? undefined,
     analyticsId: payload.get("analyticsId") ?? undefined,
@@ -83,10 +102,6 @@ export async function updatePageAction(editToken: string, payload: FormData) {
     parsed.data;
   
   // Check if PRO theme is used without PRO plan
-  const pageBeforeUpdate = await prisma.page.findUnique({ where: { editToken } });
-  if (!pageBeforeUpdate) {
-    throw new Error("Page not found");
-  }
   
   if (proBackgroundOptions.includes(bgType as any) && !pageBeforeUpdate.isPro) {
     throw new Error("PRO themes require Launch Pack upgrade");
@@ -172,13 +187,6 @@ export async function startCheckout(editToken: string, origin: string) {
   });
 
   return { url: session.url };
-}
-
-export async function markProFromSuccess(editToken: string, opts?: { revalidate?: boolean }) {
-  const page = await prisma.page.findUnique({ where: { editToken } });
-  if (!page) return null;
-  if (page.isPro) return page;
-  return markPro(editToken, opts);
 }
 
 export async function revalidatePage(editToken: string) {

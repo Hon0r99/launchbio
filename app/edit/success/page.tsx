@@ -1,4 +1,4 @@
-import { markProFromSuccess } from "@/lib/actions";
+import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,8 +10,13 @@ export default async function SuccessPage({
 }) {
   const params = await searchParams;
   const editToken = params.editToken;
-  // Do not revalidate during render to avoid Next runtime error
-  const page = editToken ? await markProFromSuccess(editToken, { revalidate: false }) : null;
+  // Note: Pro status is activated via Stripe webhook, not here
+  // This page just displays the success message
+  const page = editToken
+    ? await prisma.page.findUnique({
+        where: { editToken },
+      })
+    : null;
 
   return (
     <div className="mx-auto flex min-h-screen max-w-3xl items-center justify-center px-6 py-16">

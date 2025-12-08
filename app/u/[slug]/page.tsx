@@ -6,9 +6,11 @@ import { Button } from "@/components/ui/button";
 import { backgroundPresets, getButtonStyles } from "@/lib/themes";
 import { cn } from "@/lib/utils";
 import { ViewTracker } from "@/components/view-tracker";
+import { safeJsonParse } from "@/lib/utils/json";
 
-export async function generateMetadata({ params }: { params: { slug: string } }) {
-  const page = await prisma.page.findUnique({ where: { slug: params.slug } });
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const page = await prisma.page.findUnique({ where: { slug } });
   if (!page) return {};
   return {
     title: `${page.title} — LaunchBio`,
@@ -19,9 +21,10 @@ export async function generateMetadata({ params }: { params: { slug: string } })
 export default async function PublicPage({
   params,
 }: {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }) {
-  const page = await prisma.page.findUnique({ where: { slug: params.slug } });
+  const { slug } = await params;
+  const page = await prisma.page.findUnique({ where: { slug } });
   if (!page) notFound();
 
   const bgClass = backgroundPresets[page.bgType as keyof typeof backgroundPresets];
@@ -43,7 +46,7 @@ export default async function PublicPage({
         <Countdown target={page.eventDateTime} afterLaunchText={page.afterLaunchText} />
 
         <div className="mt-4 flex flex-wrap justify-center gap-3">
-          {(page.buttons ? (JSON.parse(page.buttons) as any[]) : [])?.map(
+          {safeJsonParse<Array<{ label: string; url: string }>>(page.buttons, [])?.map(
             (btn: { label: string; url: string }, idx: number) => (
               <Button
                 key={`${btn.label}-${idx}`}
