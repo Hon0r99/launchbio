@@ -5,8 +5,13 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { registerAction } from "../actions";
 
-export default function RegisterPage({ searchParams }: { searchParams: { returnTo?: string } }) {
-  const returnTo = searchParams.returnTo || "/dashboard";
+export default async function RegisterPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ returnTo?: string }>;
+}) {
+  const params = await searchParams;
+  const returnTo = params.returnTo || "/dashboard";
   return (
     <div className="mx-auto flex min-h-screen max-w-md items-center px-6 py-12">
       <Card className="w-full border-white/10 bg-white/5">

@@ -6,9 +6,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 export default async function SuccessPage({
   searchParams,
 }: {
-  searchParams: { editToken?: string };
+  searchParams: Promise<{ editToken?: string }>;
 }) {
-  const editToken = searchParams.editToken;
+  const params = await searchParams;
+  const editToken = params.editToken;
   // Do not revalidate during render to avoid Next runtime error
   const page = editToken ? await markProFromSuccess(editToken, { revalidate: false }) : null;
 
