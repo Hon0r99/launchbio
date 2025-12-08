@@ -3,8 +3,8 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
+  provider = "postgresql"
+  url      = env("LAUNCHBIO_DB_PRISMA_DATABASE_URL")
 }
 
 model Page {
