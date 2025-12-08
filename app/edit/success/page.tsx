@@ -9,7 +9,8 @@ export default async function SuccessPage({
   searchParams: { editToken?: string };
 }) {
   const editToken = searchParams.editToken;
-  const page = editToken ? await markProFromSuccess(editToken) : null;
+  // Do not revalidate during render to avoid Next runtime error
+  const page = editToken ? await markProFromSuccess(editToken, { revalidate: false }) : null;
 
   return (
     <div className="mx-auto flex min-h-screen max-w-3xl items-center justify-center px-6 py-16">
@@ -33,9 +34,16 @@ export default async function SuccessPage({
             </p>
           )}
           {editToken ? (
-            <Button asChild>
-              <Link href={`/edit/${editToken}`}>Back to editor</Link>
-            </Button>
+            <div className="flex flex-wrap gap-3">
+              <Button asChild>
+                <Link href={`/edit/${editToken}`}>Back to editor</Link>
+              </Button>
+              {page ? (
+              <Button asChild variant="outline">
+                <Link href={`/u/${page.slug}`}>Open public page</Link>
+              </Button>
+            ) : null}
+            </div>
           ) : null}
         </CardContent>
       </Card>

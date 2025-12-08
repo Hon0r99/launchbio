@@ -101,13 +101,17 @@ export async function incrementViews(slug: string) {
   });
 }
 
-export async function markPro(editToken: string) {
+export async function markPro(editToken: string, opts?: { revalidate?: boolean }) {
   const page = await prisma.page.update({
     where: { editToken },
     data: { isPro: true, showBranding: false },
   });
-  revalidatePath(`/u/${page.slug}`);
-  revalidatePath(`/edit/${editToken}`);
+
+  if (opts?.revalidate !== false) {
+    revalidatePath(`/u/${page.slug}`);
+    revalidatePath(`/edit/${editToken}`);
+  }
+
   return page;
 }
 
@@ -146,10 +150,17 @@ export async function startCheckout(editToken: string, origin: string) {
   return { url: session.url };
 }
 
-export async function markProFromSuccess(editToken: string) {
+export async function markProFromSuccess(editToken: string, opts?: { revalidate?: boolean }) {
   const page = await prisma.page.findUnique({ where: { editToken } });
   if (!page) return null;
   if (page.isPro) return page;
-  return markPro(editToken);
+  return markPro(editToken, opts);
+}
+
+export async function revalidatePage(editToken: string) {
+  const page = await prisma.page.findUnique({ where: { editToken } });
+  if (!page) return;
+  revalidatePath(`/u/${page.slug}`);
+  revalidatePath(`/edit/${editToken}`);
 }
 
