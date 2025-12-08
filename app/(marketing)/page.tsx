@@ -18,14 +18,7 @@ const steps = [
 export default function MarketingPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950">
-      <header className="mx-auto flex max-w-6xl items-center justify-between px-6 py-6">
-        <div className="text-lg font-semibold text-white">LaunchBio</div>
-        <Button asChild size="sm" className="shadow-lg">
-          <Link href="/create">Create page</Link>
-        </Button>
-      </header>
-
-      <main className="mx-auto flex max-w-6xl flex-col gap-16 px-6 pb-24">
+      <main className="mx-auto flex max-w-6xl flex-col gap-16 px-6 pb-24 pt-10">
         <section className="grid items-center gap-10 lg:grid-cols-[1.1fr_0.9fr]">
           <div className="space-y-6">
             <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-semibold text-white/80">

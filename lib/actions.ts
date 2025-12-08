@@ -5,6 +5,7 @@ import Stripe from "stripe";
 import { prisma } from "./prisma";
 import { createSlugFromTitle } from "./slug";
 import { pageSchema } from "./validation";
+import { getCurrentUser } from "./auth";
 
 function toDateTime(date: string, time: string) {
   const iso = `${date}T${time}:00Z`;
@@ -12,6 +13,7 @@ function toDateTime(date: string, time: string) {
 }
 
 export async function createPageAction(formData: FormData) {
+  const user = await getCurrentUser();
   const parsed = pageSchema.safeParse({
     title: formData.get("title"),
     description: formData.get("description") ?? undefined,
@@ -45,6 +47,7 @@ export async function createPageAction(formData: FormData) {
       bgType,
       buttons: JSON.stringify(buttons),
       ownerEmail: ownerEmail || null,
+      ownerId: user?.id,
     },
   });
 
@@ -124,6 +127,9 @@ function getStripe() {
 }
 
 export async function startCheckout(editToken: string, origin: string) {
+  const user = await getCurrentUser();
+  if (!user) throw new Error("Sign in to upgrade to Pro");
+
   const stripe = getStripe();
   if (!stripe) throw new Error("Stripe is not configured");
 

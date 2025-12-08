@@ -35,13 +35,13 @@ export default async function SuccessPage({
           )}
           {editToken ? (
             <div className="flex flex-wrap gap-3">
-              <Button asChild>
+            <Button asChild>
                 <Link href={`/edit/${editToken}`}>Back to editor</Link>
               </Button>
               {page ? (
               <Button asChild variant="outline">
                 <Link href={`/u/${page.slug}`}>Open public page</Link>
-              </Button>
+            </Button>
             ) : null}
             </div>
           ) : null}

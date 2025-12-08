@@ -6,12 +6,14 @@ import { Badge } from "@/components/ui/badge";
 import { UpgradeButton } from "@/components/upgrade-button";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { getCurrentUser } from "@/lib/auth";
 
 export default async function EditPage({
   params,
 }: {
   params: { editToken: string };
 }) {
+  const user = await getCurrentUser();
   const page = await prisma.page.findUnique({
     where: { editToken: params.editToken },
   });
@@ -44,8 +46,15 @@ export default async function EditPage({
           <Button asChild variant="outline">
             <Link href={`/u/${page.slug}`}>Public /u/{page.slug}</Link>
           </Button>
-          {!page.isPro ? <UpgradeButton editToken={page.editToken} /> : null}
+          {!page.isPro ? (
+            <UpgradeButton editToken={page.editToken} isAuthenticated={!!user} />
+          ) : null}
         </div>
+        {!page.isPro && !user ? (
+          <p className="text-sm text-amber-200/80">
+            Upgrade to Launch Pack requires sign in. Log in or sign up, then return to this editor.
+          </p>
+        ) : null}
       </div>
 
       <Card className="border-white/10 bg-white/5">

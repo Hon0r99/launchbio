@@ -7,6 +7,7 @@ Minimal SaaS: a link-in-bio page with a big launch countdown and buttons.
 - Tailwind CSS + shadcn-style UI
 - Prisma + SQLite
 - Stripe Checkout (test)
+- Simple email/password auth (sessions stored in DB)
 
 ### Quick start
 1. Install deps: `npm install`
@@ -20,8 +21,11 @@ Minimal SaaS: a link-in-bio page with a big launch countdown and buttons.
 ### Routes
 - `/` — marketing
 - `/create` — create page, returns public + secret edit URLs
+- `/auth/register`, `/auth/login` — email/password auth
+- `/dashboard` — list and manage your pages (requires login)
 - `/edit/[editToken]` — editor by secret token, Stripe upgrade
 - `/u/[slug]` — public launch page with countdown and buttons
 
 ### Stripe
 Test Checkout. After payment redirects to `/edit/success?editToken=...` and enables Pro (removes branding, unlocks extras).
+- Upgrading to Pro requires a logged-in user; free pages can be created without auth.

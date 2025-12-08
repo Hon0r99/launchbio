@@ -1,10 +1,17 @@
 "use client";
 
+import Link from "next/link";
 import { useTransition } from "react";
 import { toast } from "sonner";
 import { Button } from "./ui/button";
 
-export function UpgradeButton({ editToken }: { editToken: string }) {
+export function UpgradeButton({
+  editToken,
+  isAuthenticated = false,
+}: {
+  editToken: string;
+  isAuthenticated?: boolean;
+}) {
   const [isPending, startTransition] = useTransition();
 
   const handleClick = () => {
@@ -26,6 +33,19 @@ export function UpgradeButton({ editToken }: { editToken: string }) {
       }
     });
   };
+
+  if (!isAuthenticated) {
+    return (
+      <div className="flex flex-wrap gap-2">
+        <Button asChild variant="outline" size="sm">
+          <Link href={`/auth/login?returnTo=/edit/${editToken}`}>Log in to upgrade</Link>
+        </Button>
+        <Button asChild size="sm">
+          <Link href={`/auth/register?returnTo=/edit/${editToken}`}>Sign up</Link>
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <Button onClick={handleClick} disabled={isPending} variant="outline">
