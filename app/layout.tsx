@@ -28,6 +28,7 @@ export default async function RootLayout({
   const headersList = await headers();
   const pathname = headersList.get("x-pathname") || "";
   const isPublicPage = pathname.startsWith("/u/");
+  const isMarketingPage = pathname === "/";
 
   return (
     <html lang="en" className="dark">
@@ -35,7 +36,7 @@ export default async function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-slate-950 text-white`}
       >
         <Providers />
-        {!isPublicPage && <SiteHeader />}
+        {!isPublicPage && !isMarketingPage && <SiteHeader />}
         {children}
       </body>
     </html>

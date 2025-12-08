@@ -5,7 +5,6 @@ import { getCurrentUser } from "@/lib/auth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { LogoutButton } from "@/components/logout-button";
 
 export const metadata = {
   title: "Dashboard | LaunchBio",
@@ -31,7 +30,6 @@ export default async function DashboardPage() {
           <Button asChild variant="outline">
             <Link href="/create">Create new page</Link>
           </Button>
-          <LogoutButton />
         </div>
       </div>
 
@@ -57,7 +55,7 @@ export default async function DashboardPage() {
               <CardContent className="space-y-3 text-sm text-white/80">
                 <div className="flex items-center gap-2">
                   <span className="text-white/60">Public:</span>
-                  <Link href={`/u/${page.slug}`} className="text-sky-300 underline">
+                  <Link href={`/u/${page.slug}`} className="text-sky-300 underline" target="_blank">
                     /u/{page.slug}
                   </Link>
                 </div>
