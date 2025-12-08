@@ -6,6 +6,7 @@ import { prisma } from "./prisma";
 import { createSlugFromTitle } from "./slug";
 import { pageSchema } from "./validation";
 import { getCurrentUser } from "./auth";
+import { proBackgroundOptions } from "./themes";
 
 function toDateTime(date: string, time: string) {
   const iso = `${date}T${time}:00Z`;
@@ -33,6 +34,12 @@ export async function createPageAction(formData: FormData) {
 
   const { title, description, eventDate, eventTime, bgType, buttons, ownerEmail } =
     parsed.data;
+  
+  // Check if PRO theme is used without PRO plan
+  if (proBackgroundOptions.includes(bgType as any)) {
+    throw new Error("PRO themes require Launch Pack upgrade");
+  }
+  
   const eventDateTime = toDateTime(eventDate, eventTime);
   const slug = createSlugFromTitle(title);
   const editToken = crypto.randomUUID();
@@ -74,6 +81,17 @@ export async function updatePageAction(editToken: string, payload: FormData) {
 
   const { title, description, eventDate, eventTime, bgType, buttons, ownerEmail } =
     parsed.data;
+  
+  // Check if PRO theme is used without PRO plan
+  const pageBeforeUpdate = await prisma.page.findUnique({ where: { editToken } });
+  if (!pageBeforeUpdate) {
+    throw new Error("Page not found");
+  }
+  
+  if (proBackgroundOptions.includes(bgType as any) && !pageBeforeUpdate.isPro) {
+    throw new Error("PRO themes require Launch Pack upgrade");
+  }
+  
   const eventDateTime = toDateTime(eventDate, eventTime);
 
   const page = await prisma.page.update({

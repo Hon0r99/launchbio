@@ -12,7 +12,7 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Countdown } from "./countdown";
 import { createPageAction, updatePageAction } from "@/lib/actions";
-import { backgroundPresets, type BackgroundKey } from "@/lib/themes";
+import { backgroundPresets, freeBackgroundOptions, proBackgroundOptions, getButtonStyles, type BackgroundKey } from "@/lib/themes";
 import { cn } from "@/lib/utils";
 
 type FormMode = "create" | "edit";
@@ -226,8 +226,23 @@ export function PageForm({
               { value: "purple-glow", label: "Purple glow" },
               { value: "light-clean", label: "Light clean" },
               { value: "sunset", label: "Sunset" },
+              ...(values.isPro
+                ? [
+                    { value: "ocean-blue", label: "Ocean blue" },
+                    { value: "forest-green", label: "Forest green" },
+                    { value: "neon-pink", label: "Neon pink" },
+                    { value: "golden-hour", label: "Golden hour" },
+                    { value: "midnight-purple", label: "Midnight purple" },
+                    { value: "cyberpunk", label: "Cyberpunk" },
+                  ]
+                : []),
             ]}
           />
+          {!values.isPro && (
+            <p className="text-xs text-white/60">
+              Upgrade to Launch Pack to unlock 6 additional themes
+            </p>
+          )}
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
@@ -334,11 +349,20 @@ export function PageForm({
           </p>
           <Countdown target={previewDate} afterLaunchText={afterLaunchText} />
           <div className="mt-4 flex flex-wrap justify-center gap-3">
-            {buttons.map((btn) => (
-              <Button key={btn.label} variant={bgType === "light-clean" ? "secondary" : "default"}>
-                {btn.label}
-              </Button>
-            ))}
+            {buttons.map((btn, idx) => {
+              const buttonStyles = getButtonStyles(bgType);
+              return (
+                <Button
+                  key={btn.label}
+                  variant="ghost"
+                  className={cn(
+                    idx === 0 ? buttonStyles.primary : buttonStyles.secondary
+                  )}
+                >
+                  {btn.label}
+                </Button>
+              );
+            })}
           </div>
           <p className={cn("text-xs", bgType === "light-clean" ? "text-slate-600" : "text-white/60")}>
             {showBranding ? "Made with LaunchBio" : "Branding hidden"}

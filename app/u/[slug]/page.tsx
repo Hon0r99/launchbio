@@ -3,7 +3,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { Countdown } from "@/components/countdown";
 import { Button } from "@/components/ui/button";
-import { backgroundPresets } from "@/lib/themes";
+import { backgroundPresets, getButtonStyles } from "@/lib/themes";
 import { cn } from "@/lib/utils";
 import { ViewTracker } from "@/components/view-tracker";
 
@@ -25,6 +25,7 @@ export default async function PublicPage({
   if (!page) notFound();
 
   const bgClass = backgroundPresets[page.bgType as keyof typeof backgroundPresets];
+  const buttonStyles = getButtonStyles(page.bgType as any);
 
   return (
     <div className={cn("min-h-screen px-6 py-12", bgClass)}>
@@ -47,10 +48,9 @@ export default async function PublicPage({
               <Button
                 key={`${btn.label}-${idx}`}
                 asChild
-                variant={idx === 0 ? "default" : "outline"}
+                variant="ghost"
                 className={cn(
-                  idx === 1 && "bg-white/10 text-white border-white/20 hover:bg-white/20",
-                  page.bgType === "light-clean" && idx === 1 && "text-slate-900 border-slate-200"
+                  idx === 0 ? buttonStyles.primary : buttonStyles.secondary
                 )}
               >
                 <Link href={btn.url} target="_blank" rel="noreferrer">
