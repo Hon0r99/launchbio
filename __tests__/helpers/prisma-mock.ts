@@ -7,6 +7,12 @@ export function createPrismaMock() {
       findUnique: vi.fn(),
       create: vi.fn(),
     },
+    legacySession: {
+      findUnique: vi.fn(),
+      create: vi.fn(),
+      delete: vi.fn(),
+      deleteMany: vi.fn(),
+    },
     session: {
       findUnique: vi.fn(),
       create: vi.fn(),

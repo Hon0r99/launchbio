@@ -36,6 +36,9 @@ export async function registerUser(email: string, password: string) {
 export async function authenticateUser(email: string, password: string) {
   const user = await prisma.user.findUnique({ where: { email } });
   if (!user) throw new Error("Invalid credentials");
+  if (!user.passwordHash) {
+    throw new Error("This account uses OAuth. Please sign in with Google.");
+  }
   if (!verifyPassword(password, user.passwordHash)) {
     throw new Error("Invalid credentials");
   }
@@ -45,7 +48,7 @@ export async function authenticateUser(email: string, password: string) {
 async function createSession(userId: string) {
   const token = crypto.randomUUID();
   const expiresAt = new Date(Date.now() + SESSION_TTL_SECONDS * 1000);
-  await prisma.session.create({
+  await prisma.legacySession.create({
     data: { token, userId, expiresAt },
   });
   const cookieStore = await cookies();
@@ -68,7 +71,7 @@ export async function signOut() {
   const cookieStore = await cookies();
   const token = cookieStore.get(SESSION_COOKIE)?.value;
   if (token) {
-    await prisma.session.deleteMany({ where: { token } });
+    await prisma.legacySession.deleteMany({ where: { token } });
   }
   cookieStore.set(SESSION_COOKIE, "", { maxAge: 0, path: "/" });
 }
@@ -79,7 +82,7 @@ export async function signOut() {
  */
 async function cleanupExpiredSessions() {
   try {
-    await prisma.session.deleteMany({
+    await prisma.legacySession.deleteMany({
       where: {
         expiresAt: {
           lt: new Date(),
@@ -92,7 +95,27 @@ async function cleanupExpiredSessions() {
   }
 }
 
+/**
+ * Get current user from either NextAuth session or legacy session
+ * This function checks both authentication systems for compatibility
+ */
 export async function getCurrentUser() {
+  // First, try to get NextAuth session
+  try {
+    const { auth } = await import("@/lib/auth-server");
+    const session = await auth();
+    if (session?.user) {
+      // Get full user data from database
+      const user = await prisma.user.findUnique({
+        where: { id: session.user.id },
+      });
+      if (user) return user;
+    }
+  } catch (error) {
+    // NextAuth not available or not configured, fall back to legacy
+  }
+
+  // Fall back to legacy session system
   const cookieStore = await cookies();
   const token = cookieStore.get(SESSION_COOKIE)?.value;
   if (!token) {
@@ -103,7 +126,7 @@ export async function getCurrentUser() {
     return null;
   }
 
-  const session = await prisma.session.findUnique({
+  const session = await prisma.legacySession.findUnique({
     where: { token },
     include: { user: true },
   });
@@ -112,7 +135,7 @@ export async function getCurrentUser() {
     return null;
   }
   if (session.expiresAt.getTime() < Date.now()) {
-    await prisma.session.delete({ where: { token } });
+    await prisma.legacySession.delete({ where: { token } });
     cookieStore.set(SESSION_COOKIE, "", { maxAge: 0, path: "/" });
     return null;
   }

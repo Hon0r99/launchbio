@@ -7,24 +7,38 @@ Minimal SaaS: a link-in-bio page with a big launch countdown and buttons.
 - Tailwind CSS + shadcn-style UI
 - Prisma + PostgreSQL
 - Stripe Checkout with webhook verification
-- Simple email/password auth (sessions stored in DB)
+- NextAuth.js v5 with Google OAuth + email/password auth (sessions stored in DB)
 
 ### Quick start
-1. Install deps: `npm install`
+1. Install deps: `bun install` (or `npm install`)
 2. Copy `.env.example` to `.env` and configure:
-   - `DATABASE_URL` - PostgreSQL connection string (e.g., `postgresql://user:password@localhost:5432/launchbio`)
+   - `LAUNCHBIO_DB_PRISMA_DATABASE_URL` - PostgreSQL connection string (e.g., `postgresql://user:password@localhost:5432/launchbio`)
    - `STRIPE_SECRET_KEY` - Your Stripe secret key (required for payments)
    - `STRIPE_WEBHOOK_SECRET` - Stripe webhook signing secret (required for production)
-3. Apply DB schema: `npx prisma db push` or `npx prisma migrate dev`
-4. Run dev server: `npm run dev`
+   - `GOOGLE_CLIENT_ID` - Google OAuth Client ID (required for Google sign-in)
+   - `GOOGLE_CLIENT_SECRET` - Google OAuth Client Secret (required for Google sign-in)
+   - `AUTH_SECRET` - Secret for NextAuth.js (generate with `openssl rand -base64 32`)
+3. Apply DB schema: `bun run prisma migrate dev` (or `npx prisma migrate dev`)
+4. Run dev server: `bun run dev` (or `npm run dev`)
+
+#### Google OAuth Setup
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a new project or select existing one
+3. Enable Google+ API
+4. Go to "Credentials" → "Create Credentials" → "OAuth client ID"
+5. Configure consent screen if needed
+6. Create OAuth 2.0 Client ID:
+   - Application type: Web application
+   - Authorized redirect URIs: `http://localhost:3000/api/auth/callback/google` (for dev) and your production URL
+7. Copy Client ID and Client Secret to `.env`
 
 ### Routes
-- `/` — marketing
-- `/create` — create page, returns public + secret edit URLs
-- `/auth/register`, `/auth/login` — email/password auth
-- `/dashboard` — list and manage your pages (requires login)
-- `/edit/[editToken]` — editor by secret token, Stripe upgrade
-- `/u/[slug]` — public launch page with countdown and buttons
+- `/` — marketing (no navigation)
+- `/create` — create page, returns public + secret edit URLs (navigation shown)
+- `/auth/register`, `/auth/login` — email/password + Google OAuth (no navigation)
+- `/dashboard` — list and manage your pages (requires login, navigation shown)
+- `/edit/[editToken]` — editor by secret token, Stripe upgrade (navigation shown)
+- `/u/[slug]` — public launch page with countdown and buttons (no navigation)
 
 ### Stripe
 Stripe Checkout integration with webhook verification for secure payment processing.
