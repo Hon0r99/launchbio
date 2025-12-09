@@ -4,6 +4,11 @@ import bcrypt from "bcryptjs";
 import { createPrismaMock } from "../../helpers/prisma-mock";
 import { createCookiesMock } from "../../helpers/cookies-mock";
 
+// Mock NextAuth to always fail (so it falls back to legacy)
+vi.mock("@/lib/auth-server", () => ({
+  auth: vi.fn().mockRejectedValue(new Error("NextAuth not configured in tests")),
+}));
+
 // Mock modules
 vi.mock("@/lib/prisma", async () => {
   const { createPrismaMock } = await import("../../helpers/prisma-mock");
@@ -160,7 +165,7 @@ describe("auth", () => {
         updatedAt: new Date(),
       } as any);
 
-      vi.mocked(mockPrisma.session.create).mockResolvedValue({
+      vi.mocked(mockPrisma.legacySession.create).mockResolvedValue({
         id: "session-1",
         token: "token-123",
         userId,
@@ -171,7 +176,7 @@ describe("auth", () => {
       const user = await auth.signIn(email, password);
 
       expect(user.email).toBe(email);
-      expect(mockPrisma.session.create).toHaveBeenCalled();
+      expect(mockPrisma.legacySession.create).toHaveBeenCalled();
       expect(mockCookieStore.set).toHaveBeenCalled();
     });
   });
@@ -181,11 +186,11 @@ describe("auth", () => {
       const token = "session-token";
 
       mockCookieStore.get.mockReturnValue({ value: token } as any);
-      vi.mocked(mockPrisma.session.deleteMany).mockResolvedValue({ count: 1 } as any);
+      vi.mocked(mockPrisma.legacySession.deleteMany).mockResolvedValue({ count: 1 } as any);
 
       await auth.signOut();
 
-      expect(mockPrisma.session.deleteMany).toHaveBeenCalledWith({ where: { token } });
+      expect(mockPrisma.legacySession.deleteMany).toHaveBeenCalledWith({ where: { token } });
       expect(mockCookieStore.set).toHaveBeenCalledWith("lb_session", "", expect.any(Object));
     });
 
@@ -194,7 +199,7 @@ describe("auth", () => {
 
       await auth.signOut();
 
-      expect(mockPrisma.session.deleteMany).not.toHaveBeenCalled();
+      expect(mockPrisma.legacySession.deleteMany).not.toHaveBeenCalled();
       expect(mockCookieStore.set).toHaveBeenCalledWith("lb_session", "", expect.any(Object));
     });
   });
@@ -206,7 +211,7 @@ describe("auth", () => {
       const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24); // one day from now
 
       mockCookieStore.get.mockReturnValue({ value: token } as any);
-      vi.mocked(mockPrisma.session.findUnique).mockResolvedValue({
+      vi.mocked(mockPrisma.legacySession.findUnique).mockResolvedValue({
         id: "session-1",
         token,
         userId,
@@ -233,14 +238,14 @@ describe("auth", () => {
       const user = await auth.getCurrentUser();
 
       expect(user).toBeNull();
-      expect(mockPrisma.session.findUnique).not.toHaveBeenCalled();
+      expect(mockPrisma.legacySession.findUnique).not.toHaveBeenCalled();
     });
 
     it("should return null when non-existent session", async () => {
       const token = "invalid-token";
 
       mockCookieStore.get.mockReturnValue({ value: token } as any);
-      vi.mocked(mockPrisma.session.findUnique).mockResolvedValue(null);
+      vi.mocked(mockPrisma.legacySession.findUnique).mockResolvedValue(null);
 
       const user = await auth.getCurrentUser();
 
@@ -254,7 +259,7 @@ describe("auth", () => {
       const expiresAt = new Date(Date.now() - 1000); // in the past
 
       mockCookieStore.get.mockReturnValue({ value: token } as any);
-      vi.mocked(mockPrisma.session.findUnique).mockResolvedValue({
+      vi.mocked(mockPrisma.legacySession.findUnique).mockResolvedValue({
         id: "session-1",
         token,
         userId,
@@ -272,7 +277,7 @@ describe("auth", () => {
       const user = await auth.getCurrentUser();
 
       expect(user).toBeNull();
-      expect(mockPrisma.session.delete).toHaveBeenCalledWith({ where: { token } });
+      expect(mockPrisma.legacySession.delete).toHaveBeenCalledWith({ where: { token } });
       expect(mockCookieStore.set).toHaveBeenCalledWith("lb_session", "", expect.any(Object));
     });
   });
@@ -284,7 +289,7 @@ describe("auth", () => {
       const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24);
 
       mockCookieStore.get.mockReturnValue({ value: token } as any);
-      vi.mocked(mockPrisma.session.findUnique).mockResolvedValue({
+      vi.mocked(mockPrisma.legacySession.findUnique).mockResolvedValue({
         id: "session-1",
         token,
         userId,

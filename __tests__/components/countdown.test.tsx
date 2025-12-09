@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, act } from "@testing-library/react";
 import { Countdown } from "@/components/countdown";
 
 describe("Countdown", () => {
@@ -36,7 +36,7 @@ describe("Countdown", () => {
     expect(screen.getByText(afterLaunchText)).toBeInTheDocument();
   });
 
-  it("should update timer every second", () => {
+  it("should update timer every second", async () => {
     const futureDate = new Date(Date.now() + 5000); // 5 seconds from now
     render(<Countdown target={futureDate} />);
 
@@ -44,7 +44,9 @@ describe("Countdown", () => {
     expect(screen.getByText(/Days/i)).toBeInTheDocument();
 
     // Advance time by 1 second - this should trigger update
-    vi.advanceTimersByTime(1000);
+    await act(async () => {
+      vi.advanceTimersByTime(1000);
+    });
 
     // Check that component still renders
     // (timer should update via useEffect)
