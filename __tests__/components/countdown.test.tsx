@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import { Countdown } from "@/components/countdown";
 
 describe("Countdown", () => {
@@ -43,11 +43,12 @@ describe("Countdown", () => {
     // Check that timer is displayed
     expect(screen.getByText(/Days/i)).toBeInTheDocument();
 
-    // Advance time by 1 second - this should trigger update
+    // Advance time by 1 second
+    // Note: With vitest fake timers, React updates are handled automatically
+    // The warning about act() is expected but doesn't affect test functionality
     vi.advanceTimersByTime(1000);
-
-    // Check that component still renders
-    // (timer should update via useEffect)
+    
+    // Component should still render
     expect(screen.getByText(/Days/i)).toBeInTheDocument();
   });
 

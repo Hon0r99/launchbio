@@ -4,8 +4,9 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 import { Providers } from "@/components/providers";
+import { NavigationWrapper } from "@/components/navigation-wrapper";
 import { SiteHeader } from "@/components/site-header";
-import { headers } from "next/headers";
+import { Suspense } from "react";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -22,23 +23,22 @@ export const metadata: Metadata = {
   description: "Create a beautiful launch link with a big countdown in 5 minutes",
 };
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const headersList = await headers();
-  const pathname = headersList.get("x-pathname") || "";
-  const isPublicPage = pathname.startsWith("/u/");
-  const isMarketingPage = pathname === "/";
-
   return (
     <html lang="en" className="dark">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-slate-950 text-white`}
       >
         <Providers />
-        {!isPublicPage && !isMarketingPage && <SiteHeader />}
+        <NavigationWrapper>
+          <Suspense fallback={<div className="h-16" />}>
+            <SiteHeader />
+          </Suspense>
+        </NavigationWrapper>
         {children}
         <SpeedInsights />
         <Analytics />

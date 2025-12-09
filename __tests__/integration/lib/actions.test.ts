@@ -4,6 +4,11 @@ import { createPrismaMock } from "../../helpers/prisma-mock";
 import { createCookiesMock } from "../../helpers/cookies-mock";
 import Stripe from "stripe";
 
+// Mock NextAuth to always fail (so it falls back to legacy)
+vi.mock("@/lib/auth-server", () => ({
+  auth: vi.fn().mockRejectedValue(new Error("NextAuth not configured in tests")),
+}));
+
 // Mock modules
 vi.mock("@/lib/prisma", async () => {
   const { createPrismaMock } = await import("../../helpers/prisma-mock");
@@ -69,7 +74,7 @@ describe("actions", () => {
       const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24);
 
       mockCookieStore.get.mockReturnValue({ value: token } as any);
-      vi.mocked(mockPrisma.session.findUnique).mockResolvedValue({
+      vi.mocked(mockPrisma.legacySession.findUnique).mockResolvedValue({
         id: "session-1",
         token,
         userId,
@@ -180,7 +185,7 @@ describe("actions", () => {
       const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24);
 
       mockCookieStore.get.mockReturnValue({ value: token } as any);
-      vi.mocked(mockPrisma.session.findUnique).mockResolvedValue({
+      vi.mocked(mockPrisma.legacySession.findUnique).mockResolvedValue({
         id: "session-1",
         token,
         userId,
@@ -228,7 +233,7 @@ describe("actions", () => {
       const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24);
 
       mockCookieStore.get.mockReturnValue({ value: token } as any);
-      vi.mocked(mockPrisma.session.findUnique).mockResolvedValue({
+      vi.mocked(mockPrisma.legacySession.findUnique).mockResolvedValue({
         id: "session-1",
         token,
         userId,
@@ -280,7 +285,7 @@ describe("actions", () => {
       const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24);
 
       mockCookieStore.get.mockReturnValue({ value: token } as any);
-      vi.mocked(mockPrisma.session.findUnique).mockResolvedValue({
+      vi.mocked(mockPrisma.legacySession.findUnique).mockResolvedValue({
         id: "session-1",
         token,
         userId,
@@ -366,7 +371,7 @@ describe("actions", () => {
       process.env.STRIPE_SECRET_KEY = "sk_test_123";
 
       mockCookieStore.get.mockReturnValue({ value: token } as any);
-      vi.mocked(mockPrisma.session.findUnique).mockResolvedValue({
+      vi.mocked(mockPrisma.legacySession.findUnique).mockResolvedValue({
         id: "session-1",
         token,
         userId,
@@ -412,7 +417,7 @@ describe("actions", () => {
       const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24);
 
       mockCookieStore.get.mockReturnValue({ value: token } as any);
-      vi.mocked(mockPrisma.session.findUnique).mockResolvedValue({
+      vi.mocked(mockPrisma.legacySession.findUnique).mockResolvedValue({
         id: "session-1",
         token,
         userId,
@@ -438,7 +443,7 @@ describe("actions", () => {
       process.env.STRIPE_SECRET_KEY = "sk_test_123";
 
       mockCookieStore.get.mockReturnValue({ value: token } as any);
-      vi.mocked(mockPrisma.session.findUnique).mockResolvedValue({
+      vi.mocked(mockPrisma.legacySession.findUnique).mockResolvedValue({
         id: "session-1",
         token,
         userId,
